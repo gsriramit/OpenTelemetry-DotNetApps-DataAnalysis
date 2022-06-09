@@ -78,3 +78,73 @@ Resource associated with Activity:
     service.name: opentelemetry-service
 
 ```
+
+```
+KafkaProducerAnalysisFunction: [GET,POST] http://localhost:7071/api/KafkaProducerAnalysisFunction
+
+Activity.TraceId:          b68ecc95474ad231c8dade1aa3fd5e08
+Activity.SpanId:           90d0bf0d611536e6
+Activity.TraceFlags:           Recorded
+Activity.ParentSpanId:    879c949dd02826be
+Activity.ActivitySourceName: opentelemetry-service
+Activity.DisplayName: customer-otel send
+Activity.Kind:        Producer
+Activity.StartTime:   2022-06-09T12:16:30.7497342Z
+Activity.Duration:    00:00:05.1899306
+Activity.Tags:
+    messaging.system: kafka
+    messaging.destination: customer-otel
+    messaging.destination_kind:  topic
+    messaging.protocol: kafka
+    messaging.url: pkc-57jzz.southcentralus.azure.confluent.cloud:9092
+    messaging.message_id:
+    StartTime: 12:16:31
+    EndTime: 12:16:35
+Resource associated with Activity:
+    service.name: opentelemetry-service
+    service.instance.id: c0009643-c265-45a2-9e86-bb34bccfd99b
+
+Activity.TraceId:          b68ecc95474ad231c8dade1aa3fd5e08
+Activity.SpanId:           879c949dd02826be
+Activity.TraceFlags:           Recorded
+Activity.ActivitySourceName: opentelemetry-service
+Activity.DisplayName: func-httptrigger-span
+Activity.Kind:        Server
+Activity.StartTime:   2022-06-09T12:16:30.6667082Z
+Activity.Duration:    00:00:38.0784000
+Activity.Tags:
+    faas.trigger: http
+    faas.execution: e03e982e-bf2e-4407-b7d5-9fd425cbdaa1
+    faas.name: KafkaProducerAnalysisFunction
+    http.method: GET
+    http.http.host: localhost:7071
+    http.scheme: http
+    http.server_name: localhost
+    net.host.port: 7071
+    http.route: /api/KafkaProducerAnalysisFunction
+    StartTime: 12:16:30
+    EndTime: 12:17:08
+Resource associated with Activity:
+    service.name: opentelemetry-service
+    service.instance.id: c0009643-c265-45a2-9e86-bb34bccfd99b
+    
+======================
+Activity.TraceId:          b68ecc95474ad231c8dade1aa3fd5e08
+Activity.SpanId:           9c43c2a6ee28544f
+Activity.TraceFlags:           Recorded
+Activity.ParentSpanId:    879c949dd02826be
+Activity.ActivitySourceName: opentelemetry-listener-service
+Activity.DisplayName: customer-otel receive
+Activity.Kind:        Consumer
+Activity.StartTime:   2022-06-09T12:18:45.4396333Z
+Activity.Duration:    00:01:09.1751232
+Activity.Tags:
+    messaging.system: kafka
+    messaging.destination: customer-otel
+    messaging.destination_kind:  topic
+    messaging.protocol: kafka
+    messaging.url: pkc-57jzz.southcentralus.azure.confluent.cloud:9092
+    messaging.consumer_id: $Default
+Resource associated with Activity:
+    service.name: opentelemetry-listener-service
+    service.instance.id: 486d21e9-fa6b-4e27-a8e1-0396354e4ff2
