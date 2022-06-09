@@ -26,10 +26,12 @@ Resource associated with Activity:
     service.name: opentelemetry-service
     service.instance.id: a5b2d9e0-9347-4132-8f99-fda1e31ae2f9
 ```
-
-        CosmosClientTraceAnalysisFunction: [GET,POST] http://localhost:7071/api/CosmosClientTraceAnalysisFunction
+       
 
 ```
+
+        CosmosClientTraceAnalysisFunction: [GET,POST] http://localhost:7071/api/CosmosClientTraceAnalysisFunction
+        
 Activity.TraceId:          bd428ad017015b00f2071f52706b2e3c
 Activity.SpanId:           70e0b2ad2e300ea2
 Activity.TraceFlags:           Recorded
