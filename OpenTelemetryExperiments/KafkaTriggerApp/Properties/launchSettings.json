@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "KafkaTriggerApp": {
+      "commandName": "Project",
+      "commandLineArgs": "host start --port 7177 --pause-on-error"
+    }
+  }
+}
