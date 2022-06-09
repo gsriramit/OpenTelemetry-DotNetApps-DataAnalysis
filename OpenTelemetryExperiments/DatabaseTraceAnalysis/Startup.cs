@@ -20,20 +20,24 @@ namespace DatabaseTraceAnalysis
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
+            string serviceName = "opentelemetry-service";
             // OpenTelemetry Resource to be associated with logs, metrics and traces
-            var openTelemetryResourceBuilder = ResourceBuilder.CreateDefault().AddService("opentelemetry-service");
+            var openTelemetryResourceBuilder = ResourceBuilder.CreateDefault().AddService(serviceName);
             // Enable Tracing with OpenTelemetry
             var openTelemetryTracerProvider = Sdk.CreateTracerProviderBuilder()
+                .AddSource(serviceName)
                 .SetResourceBuilder(openTelemetryResourceBuilder)
                 .SetSampler(new AlwaysOnSampler())
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddSqlClientInstrumentation()
+                //.AddAspNetCoreInstrumentation()
+                //.AddHttpClientInstrumentation()
+                //.AddSqlClientInstrumentation()
                 .AddConsoleExporter()
                 .Build();
             builder.Services.AddSingleton(openTelemetryTracerProvider);
+            // Optionally inject the service-level tracer
+            builder.Services.AddSingleton(openTelemetryTracerProvider.GetTracer(serviceName));
 
-            builder.
+
         }
     }
 }
