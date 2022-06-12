@@ -12,6 +12,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using System.Net.Http;
+using DatabaseTraceAnalysis.Cosmos;
+using Microsoft.Azure.Cosmos;
+using Castle.DynamicProxy;
+using DatabaseTraceAnalysis.Interceptors;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace DatabaseTraceAnalysis
@@ -35,9 +39,23 @@ namespace DatabaseTraceAnalysis
                 .Build();
             builder.Services.AddSingleton(openTelemetryTracerProvider);
             // Optionally inject the service-level tracer
-            builder.Services.AddSingleton(openTelemetryTracerProvider.GetTracer(serviceName));
+            var requestTracer = openTelemetryTracerProvider.GetTracer(serviceName);
+            builder.Services.AddSingleton(requestTracer);
 
-
+            // Cosmos Repository - use this to test the method level interception for OTEL
+            builder.Services.AddSingleton<ICosmosSqlRepository>((s) =>
+            {
+                var proxyGenerator = new ProxyGenerator();                
+                var cosmosClient = new CosmosClient(cosmosConnectionString);
+                return proxyGenerator.CreateInterfaceProxyWithTarget<ICosmosSqlRepository>(
+                                    new CosmosSqlRepository(cosmosClient, DATABASE_ID, CONTAINER_ID), 
+                                    new CosmosTracingInterceptor(requestTracer));
+                
+            });
         }
+
+        private string cosmosConnectionString = Environment.GetEnvironmentVariable("cosmosConnectionString");
+        private const string DATABASE_ID = "db.customer";
+        private const string CONTAINER_ID = "customer.state";
     }
 }

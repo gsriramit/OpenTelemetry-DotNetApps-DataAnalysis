@@ -13,24 +13,26 @@ using System.Diagnostics;
 using Microsoft.Azure.Cosmos.Diagnostics;
 using OpenTelemetry.Trace;
 using DatabaseTraceAnalysis.Interceptors;
+using DatabaseTraceAnalysis.Cosmos;
 
 namespace DatabaseTraceAnalysis
 {
-    public class CosmosClientTraceAnalysisFunction
+    public class CosmosInterceptionTraceAnalysisFunction
     {
-       
         private readonly Tracer tracer;
-        public CosmosClientTraceAnalysisFunction(Tracer _tracer)
+        private readonly ICosmosSqlRepository cosmosSqlRepository;
+        public CosmosInterceptionTraceAnalysisFunction(Tracer _tracer, ICosmosSqlRepository _cosmosSqlRepository)
         {
             tracer = _tracer;
+            cosmosSqlRepository = _cosmosSqlRepository;
         }
 
-        [FunctionName("CosmosClientTraceAnalysisFunction")]
+        [FunctionName("CosmosInterceptionTraceAnalysisFunction")]
 
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ExecutionContext context,
             ILogger log)
-        {   
+        {
             // Create the OTEL Parent Span
             using var parentSpan = tracer.StartActiveSpan("func-httptrigger-span", SpanKind.Server);
             var spanContext = parentSpan.Context;
@@ -51,47 +53,31 @@ namespace DatabaseTraceAnalysis
 
                 DateTime invocationStartTime = DateTime.UtcNow;
                 parentSpan.SetAttribute("StartTime", invocationStartTime.ToLongTimeString());
-                ItemResponse<CustomerProfile> entityResponse = await ReadCustomerDataAsync(tracer);
+                CustomerProfile entityResponse = await ReadCustomerDataAsync();
                 DateTime invocationCompletionTime = DateTime.UtcNow;
-                parentSpan.SetAttribute("EndTime", invocationCompletionTime.ToLongTimeString());             
+                parentSpan.SetAttribute("EndTime", invocationCompletionTime.ToLongTimeString());
                 // calculate the total duration of the cosmos read operation
-                double elapsedTime = (invocationCompletionTime - invocationCompletionTime).TotalMilliseconds;              
+                double elapsedTime = (invocationCompletionTime - invocationCompletionTime).TotalMilliseconds;
                 // set the status of the http request
-                parentSpan.SetAttribute("http.status_code", entityResponse.StatusCode == System.Net.HttpStatusCode.OK? "200":"500");
+                //parentSpan.SetAttribute("http.status_code", entityResponse.StatusCode == System.Net.HttpStatusCode.OK? "200":"500");
             }
             catch (Exception ex)
             {
                 parentSpan.RecordException(ex);
-                
+
             }
             parentSpan.End();
             string responseMessage = "This HTTP triggered function executed successfully";
             return new OkObjectResult(responseMessage);
         }
 
-        
-        private async Task<ItemResponse<CustomerProfile>> ReadCustomerDataAsync(Tracer tracer)
-        {
-            using var childSpan = tracer.StartActiveSpan("cosmos-span", SpanKind.Internal);
 
-            var cosmosClient = new CosmosClient(Environment.GetEnvironmentVariable("cosmosConnectionString"));
-            var container = cosmosClient.GetContainer(EDA_DATABASE_ID, EDA_CONTAINER_ID);
+        private async Task<CustomerProfile> ReadCustomerDataAsync()
+        {
             // Assign the variables needed for the document lookup. Note: Clean this up to take only dynamic values
             string itemId = "c98d7693-eb02-486a-8961-9ae8e8fde83a";
             string customerId = "AW00011001";
-            DateTime invocationStartTime = DateTime.UtcNow;
-            ItemResponse<CustomerProfile> entityResponse = await container.ReadItemAsync<CustomerProfile>(itemId, new PartitionKey(customerId));
-            DateTime invocationCompletionTime = DateTime.UtcNow;
-            // calculate the total duration of the cosmos read operation
-            double elapsedTime = (invocationCompletionTime - invocationCompletionTime).TotalMilliseconds;
-            // set the span attributes that describe the executed operation
-            childSpan.SetAttribute("DisplayName", COSMOS_SERVER_NAME);
-            childSpan.SetAttribute("StartTime", invocationStartTime.ToLongTimeString());
-            childSpan.SetAttribute("EndTime", invocationCompletionTime.ToLongTimeString());
-            childSpan.SetAttribute("db.system", "cosmosdb");
-            childSpan.SetAttribute("db.name", EDA_DATABASE_ID);
-            childSpan.SetAttribute("db.cosmosdb.collection", EDA_CONTAINER_ID);
-            childSpan.SetStatus(entityResponse.StatusCode == System.Net.HttpStatusCode.OK ? Status.Ok : Status.Error);
+            var entityResponse = await cosmosSqlRepository.ReadItemAsync<CustomerProfile>(itemId, customerId);
 
             return entityResponse;
         }
